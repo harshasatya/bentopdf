@@ -121,7 +121,10 @@ function auditHtml(file, knownSlugs) {
   if (!isLocalized) {
     const internal = findAll(html, /<a[^>]+href=["'](\/[^"'#?]*)["']/g);
     for (const href of internal) {
-      const clean = href.replace(/\/$/, '');
+      let clean = href.replace(/\/$/, '');
+      if (BASE_PATH && clean.startsWith(BASE_PATH)) {
+        clean = clean.slice(BASE_PATH.length);
+      }
       if (clean === '') continue;
       const seg = clean.slice(1);
       if (seg.includes('/')) continue;
@@ -358,6 +361,11 @@ function auditSitemap() {
 }
 
 function main() {
+  if (process.env.SKIP_SEO_AUDIT === 'true') {
+    console.log('SEO audit skipped (SKIP_SEO_AUDIT=true).');
+    return;
+  }
+
   if (!fs.existsSync(DIST_DIR)) {
     console.error(`SEO audit: dist not found at ${DIST_DIR}`);
     process.exit(1);
